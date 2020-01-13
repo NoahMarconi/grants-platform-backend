@@ -12,7 +12,7 @@ export class Guard implements CanActivate {
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
 
         const req = context.switchToHttp().getRequest();
-
+        // console.log("req", req.url, req.headers);
         const url = req.url.split('/');
         const method = req.method;
         // console.log("url", url[1] + '/' + url[2]);

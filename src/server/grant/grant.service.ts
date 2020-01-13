@@ -18,42 +18,47 @@ export class GrantService {
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
+            .populate('donors')
             .exec();
         return response;
     }
 
-    async getById(id: string): Promise<Grant> {
+    async getById(id: string): Promise<any> {
         const response = await this.GrantModel.findOne({ _id: id, isActive: true })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
+            .populate('donors')
             .exec();
         return response;
     }
 
-    async findCreatedByMe(id: string): Promise<Grant[]> {
+    async findCreatedByMe(id: string): Promise<any> {
         const response = await this.GrantModel.find({ createdBy: id, isActive: true })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
+            .populate('donors')
             .exec();
         return response;
     }
 
-    // async findFundedByMe(id: string): Promise<Grant[]> {
-    //     const response = await this.GrantModel.find({ grantees: { $in: [id] }, isActive: true })
-    //         .populate('grantManager')
-    //         .populate('grantees')
-    //         .populate('createdBy')
-    //         .exec();
-    //     return response;
-    // }
+    async findFundedByMe(id: string): Promise<Grant[]> {
+        const response = await this.GrantModel.find({ donors: { $in: [id] }, isActive: true })
+            .populate('grantManager')
+            .populate('grantees')
+            .populate('createdBy')
+            .populate('donors')
+            .exec();
+        return response;
+    }
 
     async getTrendingGrants() {
         const response = await this.GrantModel.find({ isActive: true })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
+            .populate('donors')
             .exec();
         return response;
     }
@@ -63,6 +68,7 @@ export class GrantService {
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
+            .populate('donors')
             .exec();
         return response;
     }

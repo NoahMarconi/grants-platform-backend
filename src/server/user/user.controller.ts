@@ -7,17 +7,20 @@ import { Guard } from '../guard/guard';
 import httpStatus = require('http-status');
 
 import { UserService } from './user.service';
-import { User, userswagger , FileUploadDto } from './user.model';
+import { User, userswagger, FileUploadDto } from './user.model';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiResponse, 
-         ApiParam,
-         ApiHeader,
-         ApiBearerAuth,
-         ApiConsumes,
-         ApiBody,
-         ApiTags
-         
- } from '@nestjs/swagger';
+import {
+    ApiResponse,
+    ApiParam,
+    ApiHeader,
+    ApiBearerAuth,
+    ApiConsumes,
+    ApiBody,
+    ApiTags
+
+} from '@nestjs/swagger';
+import { ImageUploadService } from '../../helpers/imageUpload.Service';
+import { Utils } from '../../helpers/utils';
 var multer = require("multer");
 
 @ApiTags('User')
@@ -25,10 +28,12 @@ var multer = require("multer");
 @UseGuards(Guard)
 export class UserController {
 
-    constructor(public userService: UserService) { }
-    @ApiParam({name: 'id', type: String,required: true})
+    constructor(public userService: UserService,
+        private utils: Utils,
+        public imageUploadService: ImageUploadService) { }
+    @ApiParam({ name: 'id', type: String, required: true })
     @Post('/uploadProfile/:id')
-    @ApiResponse({ status: 200, description: 'User added successfully.' })
+    @ApiResponse({ status: 200, description: 'File upload successfully' })
     @UseInterceptors(
         FileInterceptor('profile', {
             storage: multer.diskStorage({
@@ -41,18 +46,22 @@ export class UserController {
             })
         })
     )
-@ApiConsumes('multipart/form-data')
-@ApiBearerAuth()
-@ApiBody({
-  description: 'List of files',
-  type: FileUploadDto,
-})
+    @ApiConsumes('multipart/form-data')
+    @ApiBearerAuth()
+    @ApiBody({
+        description: 'List of files',
+        type: FileUploadDto,
+    })
     async uploadProfile(@Res() res, @UploadedFile() file, @Body() userswagger: userswagger, @Param('id') id) {
         try {
             // `${file.path.replace(/\\/g, '/')}`
             // console.log("file", file);
-            let response = await this.userService.uploadProfile(id, file.filename);
-            return res.status(httpStatus.OK).json(new APIResponse(response, 'User added successfully', httpStatus.OK));
+
+            let imagePath = await this.imageUploadService.uploadImage(file);
+
+            let response = await this.userService.uploadProfile(id, imagePath);
+            delete response.password;
+            return res.status(httpStatus.OK).json(new APIResponse(response, 'File upload successfully', httpStatus.OK));
         } catch (e) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error adding user', httpStatus.INTERNAL_SERVER_ERROR, e));
         }
@@ -75,9 +84,9 @@ export class UserController {
     // Fetch a user BY id
     @Get(':id')
     @ApiBearerAuth()
-    @ApiParam({name: 'id', type: String})
+    @ApiParam({ name: 'id', type: String })
     @ApiResponse({ status: 200, description: 'Records fetched successfully.' })
-    async getById(@Res() res,  @Param('id') id) {
+    async getById(@Res() res, @Param('id') id) {
         try {
             let response = await this.userService.getById(id);
             if (response) {
@@ -92,7 +101,7 @@ export class UserController {
 
     @Get('searchUser/search/:name*?')
     @ApiBearerAuth()
-    @ApiParam({name: 'name', type: String})
+    @ApiParam({ name: 'name', type: String })
     @ApiResponse({ status: 200, description: 'Records fetched successfully.' })
     async searchUser(@Res() res, @Param('name') name = '') {
         try {
@@ -107,10 +116,14 @@ export class UserController {
     @Put('')
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Records updated succesfully.' })
-    async update(@Res() res, @Body() userswagger: userswagger, @Body() userModel: User) {
+    async update(@Res() res, @Body() userswagger: userswagger, @Body() userModel) {
         try {
+            if (userModel.password) {
+                userModel.password = this.utils.encrypt(userModel.password);
+            }
             let response = await this.userService.update(userModel);
             if (response) {
+                delete response.password;
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Records updated succesfully', httpStatus.OK));
             } else {
                 return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));
@@ -122,7 +135,7 @@ export class UserController {
 
     // Delete a user
     @Delete(':id')
-    @ApiParam({name: 'id', type: String})
+    @ApiParam({ name: 'id', type: String })
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Record deleted successfully.' })
     async delete(@Res() res, @Param('id') id) {

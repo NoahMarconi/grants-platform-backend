@@ -8,7 +8,6 @@ export class GrantFundTaskService {
     constructor(@InjectModel('GrantFundTask') private readonly GrantFundTaskModel: Model<GrantFundTask>) { }
 
     async add(data: GrantFundTask): Promise<GrantFundTask> {
-        console.log("data", data);
         const temp = new this.GrantFundTaskModel(data);
         let response = await temp.save();
         return response;

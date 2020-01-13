@@ -4,6 +4,8 @@ import { UserSchema } from './user.model';
 import { UserController } from './user.controller'
 import { UserService } from './user.service';
 import { MulterModule } from '@nestjs/platform-express';
+import { ImageUploadService } from '../../helpers/imageUpload.Service';
+import { Utils } from '../../helpers/utils';
 
 @Module({
   imports: [
@@ -11,6 +13,6 @@ import { MulterModule } from '@nestjs/platform-express';
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }])
   ],
   controllers: [UserController],
-  providers: [UserService]
+  providers: [UserService, Utils, ImageUploadService]
 })
 export class UserModule { }

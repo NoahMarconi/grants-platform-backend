@@ -5,7 +5,6 @@ import { User } from './user.model';
 
 @Injectable()
 export class UserService {
-  
     constructor(@InjectModel('User') private readonly UserModel: Model<User>) { }
 
     // fetch all User
@@ -43,7 +42,7 @@ export class UserService {
         return response;
     }
 
-    async uploadProfile(id: string, filePath: string): Promise<any> {
+    async uploadProfile(id: string, filePath: any): Promise<any> {
         const response = await this.UserModel.findByIdAndUpdate(id, { picture: filePath }, { new: true });
         return response;
     }

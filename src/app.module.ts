@@ -11,12 +11,11 @@ import { GrantFundModule } from './server/funding/grantFund.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost/NestJs-app', { useNewUrlParser: true }),
+    MongooseModule.forRoot('mongodb://localhost/Grants-platform', { useNewUrlParser: true }),
     AuthModule,
     UserModule,
     GrantModule,
     GrantFundModule,
-
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'files')
     }),

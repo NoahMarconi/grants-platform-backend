@@ -8,8 +8,6 @@ export class GrantFundService {
     constructor(@InjectModel('GrantFund') private readonly GrantFundModel: Model<GrantFund>) { }
 
     async add(data: any): Promise<GrantFund> {
-        console.log('fun model update call ', data);
-
         const temp = new this.GrantFundModel(data);
         let response = await temp.save();
         return response;
@@ -53,6 +51,15 @@ export class GrantFundService {
             .exec();
     }
 
+    async getBydate(grantId: any, from: any, to: any): Promise<GrantFund[]> {
+        const response = await this.GrantFundModel.find({
+            grant: grantId,
+            createdAt: { $gte: from, $lte: to },
+            isActive: true
+        })
+            .exec();
+        return response;
+    }
     async getByDonorAndGrant(grantId: string, donorId: string): Promise<GrantFund> {
         return await this.GrantFundModel.findOne({
             grant: grantId,

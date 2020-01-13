@@ -10,7 +10,7 @@ var typeEnum = {
 export enum EnvConfig {
     SINGLE,
     MULTIPLE
-  }
+}
 var currencyEnum = {
     CURRENCY: "currency",
     BLONDE: "blonde",
@@ -23,7 +23,7 @@ export enum currencyConfig {
     BLONDE,
     BLACK,
     RED
-  }
+}
 export const GrantSchema = new mongoose.Schema(
     {
         grantName: { type: String, required: true },
@@ -41,6 +41,7 @@ export const GrantSchema = new mongoose.Schema(
         ],
         grantManager: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
         grantees: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
+        donors: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
         grantAmount: { type: Number, required: true },
         totalFund: { type: Number, default: 0 },
         currency: { type: currencyEnum, default: currencyEnum.CURRENCY },
@@ -53,37 +54,37 @@ export const GrantSchema = new mongoose.Schema(
 export class grantswagger {
 
     @ApiProperty()
-    grantName:String;
+    grantName: String;
     @ApiProperty()
-    grantLink:String;
+    grantLink: String;
     @ApiProperty()
-    type:EnvConfig;
+    type: EnvConfig;
     @ApiProperty()
     singleDeliveryDate: {
-            fundingExpiryDate: Date,
-            completionDate: Date,
+        fundingExpiryDate: Date,
+        completionDate: Date,
     }
     @ApiProperty()
-        multipleMilestones: [
-            {
-                milestoneNumber: Number,
-                completionDate: Date
-            }
-        ]
-        @ApiProperty()
-        grantManager:String;
-        @ApiProperty()
-        grantees:String;
-        @ApiProperty()
-        createdBy:String
-        @ApiProperty()
-        grantAmount:Number;
-        @ApiProperty()
-        totalFund:Number;
-        @ApiProperty()
-        currency: currencyConfig;
-        @ApiProperty()
-        isActive: { type: Boolean, default: true }
+    multipleMilestones: [
+        {
+            milestoneNumber: Number,
+            completionDate: Date
+        }
+    ]
+    @ApiProperty()
+    grantManager: String;
+    @ApiProperty()
+    grantees: String;
+    @ApiProperty()
+    createdBy: String
+    @ApiProperty()
+    grantAmount: Number;
+    @ApiProperty()
+    totalFund: Number;
+    @ApiProperty()
+    currency: currencyConfig;
+    @ApiProperty()
+    isActive: { type: Boolean, default: true }
 
 }
 
@@ -91,37 +92,37 @@ export class grantUpdateswagger {
     @ApiProperty()
     _id: string;
     @ApiProperty()
-    grantName:String;
+    grantName: String;
     @ApiProperty()
-    grantLink:String;
+    grantLink: String;
     @ApiProperty()
-    type:EnvConfig;
+    type: EnvConfig;
     @ApiProperty()
     singleDeliveryDate: {
-            fundingExpiryDate: Date,
-            completionDate: Date,
+        fundingExpiryDate: Date,
+        completionDate: Date,
     }
     @ApiProperty()
-        multipleMilestones: [
-            {
-                milestoneNumber: Number,
-                completionDate: Date
-            }
-        ]
-        @ApiProperty()
-        grantManager:String;
-        @ApiProperty()
-        grantees:String;
-        @ApiProperty()
-        createdBy:String
-        @ApiProperty()
-        grantAmount:Number;
-        @ApiProperty()
-        totalFund:Number;
-        @ApiProperty()
-        currency: currencyConfig;
-        @ApiProperty()
-        isActive: { type: Boolean, default: true }
+    multipleMilestones: [
+        {
+            milestoneNumber: Number,
+            completionDate: Date
+        }
+    ]
+    @ApiProperty()
+    grantManager: String;
+    @ApiProperty()
+    grantees: String;
+    @ApiProperty()
+    createdBy: String
+    @ApiProperty()
+    grantAmount: Number;
+    @ApiProperty()
+    totalFund: Number;
+    @ApiProperty()
+    currency: currencyConfig;
+    @ApiProperty()
+    isActive: { type: Boolean, default: true }
 
 }
 
@@ -142,9 +143,11 @@ export interface Grant extends mongoose.Document {
     ];
     grantManager: [];
     grantees: [];
+    donors: [];
     grantAmount: number;
     totalFund: number;
     currency: string;
     createdBy: string;
     isActive: boolean;
+    createdAt: any;
 }
