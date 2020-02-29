@@ -2,6 +2,11 @@ import * as mongoose from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 var Schema = mongoose.Schema;
 
+var statusEnum = {
+    ACTIVE: "active",
+    CANCEL: "cancel"
+}
+
 var typeEnum = {
     SINGLE: "singleDeliveryDate",
     MULTIPLE: "multipleMilestones"
@@ -43,10 +48,12 @@ export const GrantSchema = new mongoose.Schema(
         grantees: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
         donors: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
         grantAmount: { type: Number, required: true },
-        totalFund: { type: Number, default: 0 },
+        fund: { type: Number, default: 0 },
         currency: { type: currencyEnum, default: currencyEnum.CURRENCY },
+        cancelBy: { type: Schema.Types.ObjectId, ref: "User" },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        isActive: { type: Boolean, default: true }
+        status: { type: statusEnum, default: statusEnum.ACTIVE },
+        content: { type: String }
     },
     { timestamps: true }
 )
@@ -80,7 +87,7 @@ export class grantswagger {
     @ApiProperty()
     grantAmount: Number;
     @ApiProperty()
-    totalFund: Number;
+    fund: Number;
     @ApiProperty()
     currency: currencyConfig;
     @ApiProperty()
@@ -118,12 +125,9 @@ export class grantUpdateswagger {
     @ApiProperty()
     grantAmount: Number;
     @ApiProperty()
-    totalFund: Number;
+    fund: Number;
     @ApiProperty()
     currency: currencyConfig;
-    @ApiProperty()
-    isActive: { type: Boolean, default: true }
-
 }
 
 
@@ -145,9 +149,11 @@ export interface Grant extends mongoose.Document {
     grantees: [];
     donors: [];
     grantAmount: number;
-    totalFund: number;
+    fund: number;
     currency: string;
     createdBy: string;
-    isActive: boolean;
+    cancelBy: string;
+    status: string;
+    content: string;
     createdAt: any;
 }

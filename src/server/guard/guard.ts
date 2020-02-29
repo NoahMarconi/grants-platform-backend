@@ -4,10 +4,6 @@ import * as jwt from "jsonwebtoken";
 
 @Injectable()
 export class Guard implements CanActivate {
-    excludedUrls = [
-        'auth/login',
-        'auth/signup'
-    ];
 
     canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
 
@@ -22,9 +18,11 @@ export class Guard implements CanActivate {
         let decodeToken;
         if (token) {
             decodeToken = jwt.decode(token.replace('Bearer ', ''));
+            // console.log("decodeToken", decodeToken);
+            req["user"] = decodeToken;
         }
 
-        if (token && decodeToken) {
+        if (token && decodeToken && req.user._id) {
             return true;
 
         }

@@ -1,4 +1,4 @@
-import { Controller, Get, Res, HttpStatus, Post, Body, Put, Query, NotFoundException, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Res, HttpStatus, Post, Body, Put, Query, NotFoundException, Delete, Param, UseGuards, Req } from '@nestjs/common';
 import { APIResponse } from '../../helpers/APIResponse';
 import { Guard } from '../guard/guard';
 import httpStatus = require('http-status');
@@ -25,19 +25,27 @@ export class GrantFundController {
         private grantFundTaskService: GrantFundTaskService,
         private grantService: GrantService) { }
 
+    statusEnum = {
+        ACTIVE: "active",
+        WITHDRAW: "withdraw",
+        REFUND: "refund",
+        CANCEL: "cancel"
+    }
+
     @Post('')
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Fund added successfully.' })
-    async add(@Res() res, @Body() GrantFundTaskModel: GrantFundTask) {
+    async add(@Req() req, @Res() res, @Body() GrantFundTaskModel: GrantFundTask) {
         try {
-            let grantData = await this.grantService.getById(GrantFundTaskModel.grant);
+            GrantFundTaskModel.donor = req.user.req;
+            let grantData = await this.grantService.getForFunding(GrantFundTaskModel.grant, GrantFundTaskModel.donor);
             // console.log('grand data', grantData);
             if (grantData) {
                 let grantFund = await this.grantFundService.getByDonorAndGrant(GrantFundTaskModel.grant, GrantFundTaskModel.donor);
                 if (grantFund) {
 
-                    grantFund.totalFundingAmount += +GrantFundTaskModel.fundingAmount;
-                    grantData.totalFund += +GrantFundTaskModel.fundingAmount;
+                    grantFund.fundingAmount += +GrantFundTaskModel.amount;
+                    grantData.fund += +GrantFundTaskModel.amount;
 
                     let promise = [];
                     promise.push(this.grantFundTaskService.add(GrantFundTaskModel));
@@ -51,9 +59,9 @@ export class GrantFundController {
                     let grantFundModele = [];
                     grantFundModele["grant"] = GrantFundTaskModel.grant;
                     grantFundModele['donor'] = GrantFundTaskModel.donor;
-                    grantFundModele["totalFundingAmount"] = GrantFundTaskModel.fundingAmount;
+                    grantFundModele["fundingAmount"] = GrantFundTaskModel.amount;
 
-                    grantData.totalFund += +GrantFundTaskModel.fundingAmount;
+                    grantData.fund += +GrantFundTaskModel.amount;
                     grantData.donors.push(GrantFundTaskModel.donor);
 
                     let promise = [];
@@ -66,9 +74,36 @@ export class GrantFundController {
                     return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Fund added successfully', httpStatus.OK));
                 }
             }
-            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'Grant not Found', httpStatus.BAD_REQUEST));
+            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'You can not funding in this grant ', httpStatus.BAD_REQUEST));
         } catch (e) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error adding user', httpStatus.INTERNAL_SERVER_ERROR, e));
+        }
+    }
+
+    // Withdraw Grant
+    @Post('withdraw')
+    async withdraw(@Req() req, @Res() res, @Body() body: GrantFundTask) {
+        body.donor = req.user._id;
+        let grantFund = await this.grantFundService.getByDonorAndGrant(body.grant, body.donor);
+        console.log("body",grantFund);
+        if (grantFund && grantFund.fundingAmount >= body.amount) {
+
+            let grantData = await this.grantService.getById(body.grant);
+
+            body.status = this.statusEnum.WITHDRAW;
+            grantFund.fundingAmount -= +body.amount;
+            grantData.fund -= +body.amount;
+
+            let promise = [];
+            promise.push(this.grantFundTaskService.add(body));
+            promise.push(this.grantFundService.update(grantFund));
+            promise.push(this.grantService.update(grantData));
+
+            let response = await Promise.all(promise);
+
+            return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Withdraw successfully', httpStatus.OK));
+        } else {
+            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'Amount not valide', httpStatus.BAD_REQUEST));
         }
     }
 
@@ -86,7 +121,7 @@ export class GrantFundController {
     }
 
     // Fetch a particular user using id
-    @Get(':id')
+    @Get('get/:id')
     @ApiBearerAuth()
     @ApiParam({ name: 'id', type: String })
     @ApiResponse({ status: 200, description: 'Records fetched successfully.' })
@@ -103,25 +138,23 @@ export class GrantFundController {
         }
     }
 
-    @Get('fundedByMe/:id')
+    @Get('fundedByMe')
     @ApiBearerAuth()
-    @ApiParam({ name: 'id', type: String })
     @ApiResponse({ status: 200, description: 'funded By me.' })
-    async fundedByMe(@Res() res, @Param('id') id) {
+    async fundedByMe(@Req() req, @Res() res) {
         try {
             // console.log("id", id);
-            let response = await this.grantFundService.getByDonor(id);
+            let response = await this.grantFundService.getByDonor(req.user._id);
             return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
         } catch (e) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse(null, 'Error Getting Record', httpStatus.INTERNAL_SERVER_ERROR, e));
         }
     }
 
-    @Get('myFundingTask/:id')
-    async myFundingTask(@Res() res, @Param('id') id) {
+    @Get('myFundingTask')
+    async myFundingTask(@Res() res, @Req() req) {
         try {
-            // console.log("id", id);
-            let response = await this.grantFundTaskService.getByDonor(id);
+            let response = await this.grantFundTaskService.getByDonor(req.user._id);
             return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
         } catch (e) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse(null, 'Error Getting Record', httpStatus.INTERNAL_SERVER_ERROR, e));

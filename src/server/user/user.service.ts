@@ -36,6 +36,15 @@ export class UserService {
         return response;
     }
 
+    // change password
+    async changePassword(data: any): Promise<any> {
+        const response = await this.UserModel.findOneAndUpdate(
+            { _id: data._id, password: data.oldPassword },
+            { password: data.newPassword },
+            { new: true });
+        return response;
+    }
+
     // Delete a user
     async delete(id): Promise<any> {
         const response = await this.UserModel.findByIdAndUpdate(id, { isActive: false }, { new: true });

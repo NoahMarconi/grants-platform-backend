@@ -14,7 +14,7 @@ export class GrantService {
     }
 
     async getAll(): Promise<Grant[]> {
-        const response = await this.GrantModel.find({ isActive: true })
+        const response = await this.GrantModel.find({ status: "active" })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
@@ -24,7 +24,7 @@ export class GrantService {
     }
 
     async getById(id: string): Promise<any> {
-        const response = await this.GrantModel.findOne({ _id: id, isActive: true })
+        const response = await this.GrantModel.findOne({ _id: id })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
@@ -33,8 +33,42 @@ export class GrantService {
         return response;
     }
 
+    async getForFunding(id: string, donor: string): Promise<any> {
+        const response = await this.GrantModel.findOne({
+            _id: id,
+            status: "active",
+            grantManager: { $nin: [donor] },
+            grantees: { $nin: [donor] }
+        })
+            .exec();
+        return response;
+    }
+
+    async getByIdAndManager(grant: string, user: string): Promise<any> {
+        const response = await this.GrantModel.findOne({
+            _id: grant,
+            status: "active",
+            grantManager: { $in: [user] }
+        }).exec();
+        return response;
+    }
+
+    async getByIdAndDonorAndGrantee(grant: string, user: string): Promise<any> {
+        const response = await this.GrantModel.findOne({
+            _id: grant,
+            status: "active",
+            $or: [{
+                grantees: { $in: [user] }
+            }, {
+                donors: { $in: [user] }
+            }]
+        })
+            .exec();
+        return response;
+    }
+
     async findCreatedByMe(id: string): Promise<any> {
-        const response = await this.GrantModel.find({ createdBy: id, isActive: true })
+        const response = await this.GrantModel.find({ createdBy: id })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
@@ -44,17 +78,7 @@ export class GrantService {
     }
 
     async findFundedByMe(id: string): Promise<Grant[]> {
-        const response = await this.GrantModel.find({ donors: { $in: [id] }, isActive: true })
-            .populate('grantManager')
-            .populate('grantees')
-            .populate('createdBy')
-            .populate('donors')
-            .exec();
-        return response;
-    }
-
-    async getTrendingGrants() {
-        const response = await this.GrantModel.find({ isActive: true })
+        const response = await this.GrantModel.find({ donors: { $in: [id] } })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
@@ -64,7 +88,7 @@ export class GrantService {
     }
 
     async managedByMe(id: string): Promise<Grant[]> {
-        const response = await this.GrantModel.find({ grantManager: id, isActive: true })
+        const response = await this.GrantModel.find({ grantManager: id })
             .populate('grantManager')
             .populate('grantees')
             .populate('createdBy')
@@ -78,8 +102,15 @@ export class GrantService {
         return response;
     }
 
-    async delete(id): Promise<any> {
-        const response = await this.GrantModel.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    async cancel(grant: string, user: string): Promise<any> {
+        const response = await this.GrantModel.findByIdAndUpdate(
+            grant,
+            {
+                status: "cancel",
+                cancelBy: user
+            },
+            { new: true }
+        );
         return response;
     }
 

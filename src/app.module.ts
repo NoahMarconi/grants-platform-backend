@@ -16,9 +16,9 @@ import { GrantFundModule } from './server/funding/grantFund.module';
     UserModule,
     GrantModule,
     GrantFundModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'files')
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'files')
+    // }),
   ],
   controllers: [AppController],
   providers: [AppService],

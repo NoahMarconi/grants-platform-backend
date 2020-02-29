@@ -5,6 +5,7 @@ import { GrantService } from './grant.service';
 import { GrantController } from './grant.controller';
 import { GrantFundService } from '../funding/grantFund.service';
 import { GrantFundSchema } from '../funding/grantFund.model';
+import { ImageUploadService } from '../../helpers/imageUpload.Service';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { GrantFundSchema } from '../funding/grantFund.model';
     MongooseModule.forFeature([{ name: 'GrantFund', schema: GrantFundSchema }])
   ],
   controllers: [GrantController],
-  providers: [GrantService, GrantFundService]
+  providers: [GrantService, GrantFundService, ImageUploadService]
 })
 export class GrantModule { }

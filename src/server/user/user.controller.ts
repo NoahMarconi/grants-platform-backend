@@ -31,8 +31,8 @@ export class UserController {
     constructor(public userService: UserService,
         private utils: Utils,
         public imageUploadService: ImageUploadService) { }
-    @ApiParam({ name: 'id', type: String, required: true })
-    @Post('/uploadProfile/:id')
+
+    @Post('/uploadProfile')
     @ApiResponse({ status: 200, description: 'File upload successfully' })
     @UseInterceptors(
         FileInterceptor('profile', {
@@ -52,14 +52,14 @@ export class UserController {
         description: 'List of files',
         type: FileUploadDto,
     })
-    async uploadProfile(@Res() res, @UploadedFile() file, @Body() userswagger: userswagger, @Param('id') id) {
+    async uploadProfile(@Req() req, @Res() res, @UploadedFile() file, @Body() userswagger: userswagger) {
         try {
             // `${file.path.replace(/\\/g, '/')}`
             // console.log("file", file);
 
             let imagePath = await this.imageUploadService.uploadImage(file);
 
-            let response = await this.userService.uploadProfile(id, imagePath);
+            let response = await this.userService.uploadProfile(req.user._id, imagePath);
             delete response.password;
             return res.status(httpStatus.OK).json(new APIResponse(response, 'File upload successfully', httpStatus.OK));
         } catch (e) {
@@ -90,6 +90,24 @@ export class UserController {
         try {
             let response = await this.userService.getById(id);
             if (response) {
+                delete response.privateKey;
+                return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
+            } else {
+                return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));
+            }
+        } catch (e) {
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse(null, 'Error Getting Record', httpStatus.INTERNAL_SERVER_ERROR, e));
+        }
+    }
+
+    @Get('get/privateKey')
+    @ApiBearerAuth()
+    @ApiResponse({ status: 200, description: 'Records fetched successfully.' })
+    async getPrivateKey(@Req() req, @Res() res) {
+        try {
+            let id = req.user._id;
+            let response = await this.userService.getById(id);
+            if (response) {
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
             } else {
                 return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));
@@ -116,11 +134,13 @@ export class UserController {
     @Put('')
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Records updated succesfully.' })
-    async update(@Res() res, @Body() userswagger: userswagger, @Body() userModel) {
+    async update(@Req() req, @Res() res, @Body() userswagger: userswagger, @Body() userModel) {
         try {
+            userModel['_id'] = req.user._id;
             if (userModel.password) {
-                userModel.password = this.utils.encrypt(userModel.password);
+                delete userModel.password
             }
+
             let response = await this.userService.update(userModel);
             if (response) {
                 delete response.password;
@@ -128,6 +148,32 @@ export class UserController {
             } else {
                 return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));
             }
+        } catch (e) {
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error updating Record', httpStatus.INTERNAL_SERVER_ERROR, e));
+        }
+    }
+
+    // Update a user password
+    @Put('changePassword')
+    @ApiBearerAuth()
+    @ApiResponse({ status: 200, description: 'Password change succesfully.' })
+    async changePassword(@Req() req, @Res() res, @Body() userswagger: userswagger, @Body() body) {
+        try {
+            body['_id'] = req.user._id;
+
+            if (body.oldPassword && body.newPassword) {
+                body.oldPassword = this.utils.encrypt(body.oldPassword);
+                body.newPassword = this.utils.encrypt(body.newPassword);
+
+                let response = await this.userService.changePassword(body);
+                if (response) {
+                    delete response.password;
+                    return res.status(httpStatus.OK).json(new APIResponse(response, 'Password change succesfully', httpStatus.OK));
+                } else {
+                    return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'Invalid password', httpStatus.BAD_REQUEST));
+                }
+            }
+            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'Password required', httpStatus.BAD_REQUEST));
         } catch (e) {
             return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error updating Record', httpStatus.INTERNAL_SERVER_ERROR, e));
         }

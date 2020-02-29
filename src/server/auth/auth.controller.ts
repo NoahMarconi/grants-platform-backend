@@ -54,6 +54,7 @@ export class AuthController {
                     token: token
                 }
                 delete response.password;
+                delete response.privateKey;
 
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Login successfully', httpStatus.OK));
             } else {
