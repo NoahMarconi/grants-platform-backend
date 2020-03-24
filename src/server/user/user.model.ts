@@ -9,7 +9,7 @@ export const UserSchema = new mongoose.Schema(
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     picture: { type: String },
-    privateKey: { type: String },
+    publicKey: { type: String },
     isActive: { type: Boolean, default: true }
   },
   { timestamps: true }
@@ -39,6 +39,9 @@ export class userswagger {
   picture: string;
 
   @ApiProperty()
+  publicKey: string
+
+  @ApiProperty()
   isActive: Boolean;
 }
 
@@ -61,6 +64,9 @@ export class authswagger {
 
   @ApiProperty()
   picture: string;
+
+  @ApiProperty()
+  publicKey: string
 
   @ApiProperty()
   isActive: Boolean;
@@ -88,6 +94,6 @@ export interface User extends mongoose.Document {
   email: string;
   password: string;
   picture: string;
-  privateKey: string;
+  publicKey: string;
   isActive: boolean;
 }

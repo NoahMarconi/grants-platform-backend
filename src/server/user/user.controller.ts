@@ -90,24 +90,6 @@ export class UserController {
         try {
             let response = await this.userService.getById(id);
             if (response) {
-                delete response.privateKey;
-                return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
-            } else {
-                return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));
-            }
-        } catch (e) {
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse(null, 'Error Getting Record', httpStatus.INTERNAL_SERVER_ERROR, e));
-        }
-    }
-
-    @Get('get/privateKey')
-    @ApiBearerAuth()
-    @ApiResponse({ status: 200, description: 'Records fetched successfully.' })
-    async getPrivateKey(@Req() req, @Res() res) {
-        try {
-            let id = req.user._id;
-            let response = await this.userService.getById(id);
-            if (response) {
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Records fetched successfully', httpStatus.OK));
             } else {
                 return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'No Record Found', httpStatus.BAD_REQUEST));

@@ -25,4 +25,7 @@ COPY . .
 
 COPY --from=development /usr/src/app/dist ./dist
 
+# Expose the port the app runs in
+EXPOSE 7001
+
 CMD ["node", "dist/main"]

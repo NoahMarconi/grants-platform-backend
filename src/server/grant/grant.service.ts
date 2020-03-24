@@ -16,7 +16,7 @@ export class GrantService {
     async getAll(): Promise<Grant[]> {
         const response = await this.GrantModel.find({ status: "active" })
             .populate('grantManager')
-            .populate('grantees')
+            .populate('grantees.grantee')
             .populate('createdBy')
             .populate('donors')
             .exec();
@@ -26,9 +26,9 @@ export class GrantService {
     async getById(id: string): Promise<any> {
         const response = await this.GrantModel.findOne({ _id: id })
             .populate('grantManager')
-            .populate('grantees')
             .populate('createdBy')
             .populate('donors')
+            .populate('grantees.grantee')
             .exec();
         return response;
     }
@@ -48,7 +48,7 @@ export class GrantService {
         const response = await this.GrantModel.findOne({
             _id: grant,
             status: "active",
-            grantManager: { $in: [user] }
+            grantManager: user
         }).exec();
         return response;
     }
@@ -58,7 +58,7 @@ export class GrantService {
             _id: grant,
             status: "active",
             $or: [{
-                grantees: { $in: [user] }
+                grantees: { $elemMatch: { grantee: user } }
             }, {
                 donors: { $in: [user] }
             }]
@@ -70,7 +70,7 @@ export class GrantService {
     async findCreatedByMe(id: string): Promise<any> {
         const response = await this.GrantModel.find({ createdBy: id })
             .populate('grantManager')
-            .populate('grantees')
+            .populate('grantees.grantee')
             .populate('createdBy')
             .populate('donors')
             .exec();
@@ -80,7 +80,7 @@ export class GrantService {
     async findFundedByMe(id: string): Promise<Grant[]> {
         const response = await this.GrantModel.find({ donors: { $in: [id] } })
             .populate('grantManager')
-            .populate('grantees')
+            .populate('grantees.grantee')
             .populate('createdBy')
             .populate('donors')
             .exec();
@@ -90,7 +90,7 @@ export class GrantService {
     async managedByMe(id: string): Promise<Grant[]> {
         const response = await this.GrantModel.find({ grantManager: id })
             .populate('grantManager')
-            .populate('grantees')
+            .populate('grantees.grantee')
             .populate('createdBy')
             .populate('donors')
             .exec();

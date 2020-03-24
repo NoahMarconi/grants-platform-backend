@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 var Schema = mongoose.Schema;
 
 var statusEnum = {
+    PENDING: "pending",
     ACTIVE: "active",
     CANCEL: "cancel"
 }
@@ -44,15 +45,21 @@ export const GrantSchema = new mongoose.Schema(
                 completionDate: Date
             }
         ],
-        grantManager: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
-        grantees: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
+        grantManager: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        grantees: [
+            {
+                grantee: { type: Schema.Types.ObjectId, ref: "User", required: true },
+                amount: { type: Number, required: true }
+            }
+        ],
         donors: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
         grantAmount: { type: Number, required: true },
         fund: { type: Number, default: 0 },
         currency: { type: currencyEnum, default: currencyEnum.CURRENCY },
         cancelBy: { type: Schema.Types.ObjectId, ref: "User" },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        status: { type: statusEnum, default: statusEnum.ACTIVE },
+        status: { type: statusEnum, default: statusEnum.PENDING },
+        contractId: { type: String, required: true },
         content: { type: String }
     },
     { timestamps: true }
@@ -81,7 +88,12 @@ export class grantswagger {
     @ApiProperty()
     grantManager: String;
     @ApiProperty()
-    grantees: String;
+    grantees: [
+        {
+            grantee: String,
+            amount: Number
+        }
+    ];
     @ApiProperty()
     createdBy: String
     @ApiProperty()
@@ -119,7 +131,12 @@ export class grantUpdateswagger {
     @ApiProperty()
     grantManager: String;
     @ApiProperty()
-    grantees: String;
+    grantees: [
+        {
+            grantee: String,
+            amount: Number
+        }
+    ];
     @ApiProperty()
     createdBy: String
     @ApiProperty()
@@ -145,8 +162,13 @@ export interface Grant extends mongoose.Document {
             completionDate: Date
         }
     ];
-    grantManager: [];
-    grantees: [];
+    grantManager: String;
+    grantees: [
+        {
+            grantee: String,
+            amount: Number
+        }
+    ];
     donors: [];
     grantAmount: number;
     fund: number;
@@ -155,5 +177,6 @@ export interface Grant extends mongoose.Document {
     cancelBy: string;
     status: string;
     content: string;
+    contractId: string;
     createdAt: any;
 }

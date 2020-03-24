@@ -1,18 +1,19 @@
 import { Controller, Get, Res, HttpStatus, Post, Body, Put, Query, NotFoundException, Delete, Param } from '@nestjs/common';
 import { APIResponse } from '../../helpers/APIResponse';
 import httpStatus = require('http-status');
-import { User,authswagger,Loginswagger } from '../user/user.model';
+import { User, authswagger, Loginswagger } from '../user/user.model';
 import { AuthService } from './auth.service';
 import { Utils } from '../../helpers/utils';
 import { JWTHelper } from '../../helpers/jwt.helper';
-import { ApiResponse, 
+import {
+    ApiResponse,
     ApiParam,
     ApiHeader,
     ApiBearerAuth,
     ApiConsumes,
     ApiBody,
     ApiTags
-    
+
 } from '@nestjs/swagger';
 
 @ApiTags('Auth')
@@ -22,9 +23,12 @@ export class AuthController {
 
     @Post('/signUp')
     @ApiResponse({ status: 200, description: 'User added successfully.' })
-    async signUp(@Res() res, @Body() userModel: User,@Body() userswagger: authswagger) {
+    async signUp(@Res() res, @Body() userModel: User, @Body() userswagger: authswagger) {
         try {
             userModel.password = this.utils.encrypt(userModel.password);
+
+            userModel.userName = userModel.userName.toLocaleLowerCase();
+            userModel.email = userModel.email.toLocaleLowerCase();
 
             let response = await this.authService.add(userModel);
             delete response.password;
@@ -36,7 +40,7 @@ export class AuthController {
 
     @Post('/login')
     @ApiResponse({ status: 200, description: 'Login successfully.' })
-    async login(@Res() res, @Body() user,@Body() login:Loginswagger) {
+    async login(@Res() res, @Body() user, @Body() login: Loginswagger) {
         try {
             user.password = this.utils.encrypt(user.password);
 
@@ -54,7 +58,7 @@ export class AuthController {
                     token: token
                 }
                 delete response.password;
-                delete response.privateKey;
+                // delete response.privateKey;
 
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Login successfully', httpStatus.OK));
             } else {
