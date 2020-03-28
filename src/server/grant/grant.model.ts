@@ -3,7 +3,6 @@ import { ApiProperty } from '@nestjs/swagger';
 var Schema = mongoose.Schema;
 
 var statusEnum = {
-    PENDING: "pending",
     ACTIVE: "active",
     CANCEL: "cancel"
 }
@@ -49,16 +48,18 @@ export const GrantSchema = new mongoose.Schema(
         grantees: [
             {
                 grantee: { type: Schema.Types.ObjectId, ref: "User", required: true },
-                amount: { type: Number, required: true }
+                allocationAmount: { type: Number, required: true },
+                payedAmount: { type: Number, default: 0 }
             }
         ],
         donors: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
-        grantAmount: { type: Number, required: true },
-        fund: { type: Number, default: 0 },
+        targetFunding: { type: Number, required: true },
+        totalFunding: { type: Number, default: 0 },
+        totalPayed: { type: Number, default: 0 },
         currency: { type: currencyEnum, default: currencyEnum.CURRENCY },
         cancelBy: { type: Schema.Types.ObjectId, ref: "User" },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-        status: { type: statusEnum, default: statusEnum.PENDING },
+        status: { type: statusEnum, default: statusEnum.ACTIVE },
         contractId: { type: String, required: true },
         content: { type: String }
     },
@@ -91,20 +92,20 @@ export class grantswagger {
     grantees: [
         {
             grantee: String,
-            amount: Number
+            allocationAmount: Number,
+            payedAmount: Number
         }
     ];
     @ApiProperty()
     createdBy: String
     @ApiProperty()
-    grantAmount: Number;
+    targetFunding: Number;
     @ApiProperty()
-    fund: Number;
+    totalFunding: Number;
+    @ApiProperty()
+    totalPayed: Number;
     @ApiProperty()
     currency: currencyConfig;
-    @ApiProperty()
-    isActive: { type: Boolean, default: true }
-
 }
 
 export class grantUpdateswagger {
@@ -134,15 +135,18 @@ export class grantUpdateswagger {
     grantees: [
         {
             grantee: String,
-            amount: Number
+            allocationAmount: Number,
+            payedAmount: Number
         }
     ];
     @ApiProperty()
     createdBy: String
     @ApiProperty()
-    grantAmount: Number;
+    targetFunding: Number;
     @ApiProperty()
-    fund: Number;
+    totalFunding: Number;
+    @ApiProperty()
+    totalPayed: Number;
     @ApiProperty()
     currency: currencyConfig;
 }
@@ -166,12 +170,14 @@ export interface Grant extends mongoose.Document {
     grantees: [
         {
             grantee: String,
-            amount: Number
+            allocationAmount: Number,
+            payedAmount: Number
         }
     ];
     donors: [];
-    grantAmount: number;
-    fund: number;
+    targetFunding: number;
+    totalFunding: number;
+    totalPayed: Number;
     currency: string;
     createdBy: string;
     cancelBy: string;

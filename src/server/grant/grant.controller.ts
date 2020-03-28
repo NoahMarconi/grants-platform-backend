@@ -169,15 +169,15 @@ export class GrantController {
             let allGrant = await this.grantService.getAll();
 
             allGrant = allGrant.sort(function (obj1, obj2) {
-                if (obj1.fund == 0) {
-                    return (obj2.fund / obj2.grantAmount * 100) - 0;
+                if (obj1.totalFunding == 0) {
+                    return (obj2.totalFunding / obj2.targetFunding * 100) - 0;
                 }
 
-                if (obj2.fund == 0) {
-                    return 0 - (obj1.fund / obj1.grantAmount * 100);
+                if (obj2.totalFunding == 0) {
+                    return 0 - (obj1.totalFunding / obj1.targetFunding * 100);
                 }
 
-                return (obj2.fund / obj2.grantAmount * 100) - (obj1.fund / obj1.grantAmount * 100);
+                return (obj2.totalFunding / obj2.targetFunding * 100) - (obj1.totalFunding / obj1.targetFunding * 100);
             });
 
             return res.status(httpStatus.OK).json(new APIResponse(allGrant, 'Grants fetched successfully', httpStatus.OK));
@@ -189,9 +189,9 @@ export class GrantController {
     @Put('')
     @ApiBearerAuth()
     @ApiResponse({ status: 200, description: 'Grants updated successfully' })
-    async update(@Res() res, @Body() userModel: Grant, @Body() grantUpdateswagger: grantUpdateswagger) {
+    async update(@Res() res, @Body() grantModel: Grant, @Body() grantUpdateswagger: grantUpdateswagger) {
         try {
-            let response = await this.grantService.update(userModel);
+            let response = await this.grantService.update(grantModel);
             if (response) {
                 return res.status(httpStatus.OK).json(new APIResponse(response, 'Grants updated succesfully', httpStatus.OK));
             } else {
@@ -216,7 +216,7 @@ export class GrantController {
                 if (grantData.type == "singleDeliveryDate") {
                     const isAfter = moment(now).isAfter(moment(grantData.singleDeliveryDate.fundingExpiryDate));
 
-                    if (isAfter && grantData.fund < grantData.grantAmount) {
+                    if (isAfter && grantData.totalFunding < grantData.targetFunding) {
                         await this.grantService.cancel(grantData._id, req.user._id);
                         return res.status(httpStatus.OK).json(new APIResponse(null, 'Grant cancel successfully', httpStatus.OK));
                     }
@@ -225,7 +225,7 @@ export class GrantController {
                 if (grantData.type == "multipleMilestones") {
                     const isAfter = moment(now).isAfter(moment(grantData.multipleMilestones[grantData.multipleMilestones.length - 1].completionDate));
 
-                    if (isAfter && grantData.fund < grantData.grantAmount) {
+                    if (isAfter && grantData.totalFunding < grantData.targetFunding) {
                         await this.grantService.cancel(grantData._id, req.user._id);
                         return res.status(httpStatus.OK).json(new APIResponse(null, 'Grant cancel successfully', httpStatus.OK));
                     }
