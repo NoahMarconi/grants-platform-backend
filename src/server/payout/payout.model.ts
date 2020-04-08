@@ -5,8 +5,8 @@ var Schema = mongoose.Schema;
 var statusEnum = {
     PENDING: "pending",
     APPROVED: "approved",
-    REJECT: "reject",
-    DELETE: "delete"
+    REJECT: "rejected",
+    DELETE: "deleted"
 }
 
 export const PayoutSchema = new mongoose.Schema(
@@ -25,5 +25,6 @@ export interface Payout extends mongoose.Document {
     grantManager: string,
     grantee: string,
     grant: string,
-    requestAmount: number
+    requestAmount: number,
+    status: string
 }

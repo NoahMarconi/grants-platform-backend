@@ -69,7 +69,6 @@ export class GrantFundService {
     }
 
     async update(data: GrantFund): Promise<GrantFund> {
-        console.log('fun model update call ', data);
         const response = await this.GrantFundModel.findByIdAndUpdate(data._id, data, { new: true });
         return response;
     }

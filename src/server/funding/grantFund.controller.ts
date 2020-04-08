@@ -37,46 +37,61 @@ export class GrantFundController {
     @ApiResponse({ status: 200, description: 'Fund added successfully.' })
     async add(@Req() req, @Res() res, @Body() GrantFundTaskModel: GrantFundTask) {
         try {
-            GrantFundTaskModel.donor = req.user.req;
+            GrantFundTaskModel.donor = req.user._id;
             let grantData = await this.grantService.getForFunding(GrantFundTaskModel.grant, GrantFundTaskModel.donor);
-            // console.log('grand data', grantData);
             if (grantData) {
-                let grantFund = await this.grantFundService.getByDonorAndGrant(GrantFundTaskModel.grant, GrantFundTaskModel.donor);
-                if (grantFund) {
+                if (grantData.canFund) {
+                    if (GrantFundTaskModel.amount > (grantData.targetFunding - grantData.totalFunding)) {
+                        grantData.canFund = false;
+                        GrantFundTaskModel.amount = grantData.targetFunding - grantData.totalFunding;
+                    }
 
-                    grantFund.fundingAmount += +GrantFundTaskModel.amount;
-                    grantData.fund += +GrantFundTaskModel.amount;
+                    let grantFund = await this.grantFundService.getByDonorAndGrant(GrantFundTaskModel.grant, GrantFundTaskModel.donor);
+                    if (grantFund) {
 
-                    let promise = [];
-                    promise.push(this.grantFundTaskService.add(GrantFundTaskModel));
-                    promise.push(this.grantFundService.update(grantFund));
-                    promise.push(this.grantService.update(grantData));
+                        grantFund.fundingAmount += +GrantFundTaskModel.amount;
+                        grantData.totalFunding += +GrantFundTaskModel.amount;
 
-                    let response = await Promise.all(promise);
+                        if (grantData.totalFunding == grantData.targetFunding) {
+                            grantData.canFund = false;
+                        }
 
-                    return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Fund added successfully', httpStatus.OK));
-                } else {
-                    let grantFundModele = [];
-                    grantFundModele["grant"] = GrantFundTaskModel.grant;
-                    grantFundModele['donor'] = GrantFundTaskModel.donor;
-                    grantFundModele["fundingAmount"] = GrantFundTaskModel.amount;
+                        let promise = [];
+                        promise.push(this.grantFundTaskService.add(GrantFundTaskModel));
+                        promise.push(this.grantFundService.update(grantFund));
+                        promise.push(this.grantService.update(grantData));
 
-                    grantData.fund += +GrantFundTaskModel.amount;
-                    grantData.donors.push(GrantFundTaskModel.donor);
+                        let response = await Promise.all(promise);
 
-                    let promise = [];
-                    promise.push(this.grantFundTaskService.add(GrantFundTaskModel));
-                    promise.push(this.grantFundService.add(grantFundModele));
-                    promise.push(this.grantService.update(grantData));
+                        return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Fund added successfully', httpStatus.OK));
+                    } else {
+                        let grantFundModele = [];
+                        grantFundModele["grant"] = GrantFundTaskModel.grant;
+                        grantFundModele['donor'] = GrantFundTaskModel.donor;
+                        grantFundModele["fundingAmount"] = GrantFundTaskModel.amount;
 
-                    let response = await Promise.all(promise);
+                        grantData.totalFunding += +GrantFundTaskModel.amount;
+                        grantData.donors.push(GrantFundTaskModel.donor);
 
-                    return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Fund added successfully', httpStatus.OK));
+                        if (grantData.totalFunding == grantData.targetFunding) {
+                            grantData.canFund = false;
+                        }
+
+                        let promise = [];
+                        promise.push(this.grantFundTaskService.add(GrantFundTaskModel));
+                        promise.push(this.grantFundService.add(grantFundModele));
+                        promise.push(this.grantService.update(grantData));
+
+                        let response = await Promise.all(promise);
+
+                        return res.status(httpStatus.OK).json(new APIResponse(response[1], 'Fund added successfully', httpStatus.OK));
+                    }
                 }
+                return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'Grant not open to funding', httpStatus.BAD_REQUEST));
             }
-            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'You can not funding in this grant ', httpStatus.BAD_REQUEST));
+            return res.status(httpStatus.BAD_REQUEST).json(new APIResponse({}, 'You can not funding on this grant', httpStatus.BAD_REQUEST));
         } catch (e) {
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error adding user', httpStatus.INTERNAL_SERVER_ERROR, e));
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json(new APIResponse({}, 'Error funding grant', httpStatus.INTERNAL_SERVER_ERROR, e));
         }
     }
 
@@ -85,7 +100,7 @@ export class GrantFundController {
     async withdraw(@Req() req, @Res() res, @Body() body: GrantFundTask) {
         body.donor = req.user._id;
         let grantFund = await this.grantFundService.getByDonorAndGrant(body.grant, body.donor);
-        console.log("body",grantFund);
+        console.log("body", grantFund);
         if (grantFund && grantFund.fundingAmount >= body.amount) {
 
             let grantData = await this.grantService.getById(body.grant);

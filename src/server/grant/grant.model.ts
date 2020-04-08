@@ -17,17 +17,11 @@ export enum EnvConfig {
     MULTIPLE
 }
 var currencyEnum = {
-    CURRENCY: "currency",
-    BLONDE: "blonde",
-    BLACK: "black",
-    RED: "red"
+    WEI: "wei"
 }
 
 export enum currencyConfig {
-    CURRENCY,
-    BLONDE,
-    BLACK,
-    RED
+    WEI,
 }
 export const GrantSchema = new mongoose.Schema(
     {
@@ -56,7 +50,8 @@ export const GrantSchema = new mongoose.Schema(
         targetFunding: { type: Number, required: true },
         totalFunding: { type: Number, default: 0 },
         totalPayed: { type: Number, default: 0 },
-        currency: { type: currencyEnum, default: currencyEnum.CURRENCY },
+        canFund: { type: Boolean, default: true },
+        currency: { type: currencyEnum, default: currencyEnum.WEI },
         cancelBy: { type: Schema.Types.ObjectId, ref: "User" },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
         status: { type: statusEnum, default: statusEnum.ACTIVE },
@@ -156,33 +151,34 @@ export class grantUpdateswagger {
 
 export interface Grant extends mongoose.Document {
     _id: string;
-    grantName: String;
+    grantName: string;
     grantLink: string;
     type: string;
     singleDeliveryDate: object;
     multipleMilestones: [
         {
-            milestoneNumber: Number,
+            milestoneNumber: number,
             completionDate: Date
         }
     ];
-    grantManager: String;
+    grantManager: string;
     grantees: [
         {
-            grantee: String,
-            allocationAmount: Number,
-            payedAmount: Number
+            grantee: string,
+            allocationAmount: number,
+            payedAmount: number
         }
     ];
     donors: [];
     targetFunding: number;
     totalFunding: number;
-    totalPayed: Number;
+    totalPayed: number;
     currency: string;
     createdBy: string;
     cancelBy: string;
     status: string;
     content: string;
     contractId: string;
+    canFund: boolean;
     createdAt: any;
 }

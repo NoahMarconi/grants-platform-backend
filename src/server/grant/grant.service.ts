@@ -19,6 +19,7 @@ export class GrantService {
             .populate('grantees.grantee')
             .populate('createdBy')
             .populate('donors')
+            .sort({ createdAt: -1 })
             .exec();
         return response;
     }
@@ -33,12 +34,12 @@ export class GrantService {
         return response;
     }
 
-    async getForFunding(id: string, donor: string): Promise<any> {
+    async getForFunding(grantId: string, donor: string): Promise<any> {
         const response = await this.GrantModel.findOne({
-            _id: id,
-            status: "active",
-            grantManager: { $nin: [donor] },
-            grantees: { $nin: [donor] }
+            _id: grantId,
+            grantManager: { $ne: donor },
+            grantees: { $elemMatch: { grantee: { $ne: donor } } },
+            status: "active"
         })
             .exec();
         return response;
@@ -94,6 +95,14 @@ export class GrantService {
             .populate('createdBy')
             .populate('donors')
             .exec();
+        return response;
+    }
+
+    async getByManagerAndGrant(grantId: string, managerId: string): Promise<Grant> {
+        const response = await this.GrantModel.findOne({
+            _id: grantId,
+            grantManager: managerId
+        }).exec();
         return response;
     }
 

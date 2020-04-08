@@ -169,15 +169,15 @@ export class GrantController {
             let allGrant = await this.grantService.getAll();
 
             allGrant = allGrant.sort(function (obj1, obj2) {
-                if (obj1.totalFunding == 0) {
-                    return (obj2.totalFunding / obj2.targetFunding * 100) - 0;
+                if ((obj1.totalFunding + obj1.totalPayed) == 0) {
+                    return ((obj2.totalFunding + obj2.totalPayed) / obj2.targetFunding * 100) - 0;
                 }
 
-                if (obj2.totalFunding == 0) {
-                    return 0 - (obj1.totalFunding / obj1.targetFunding * 100);
+                if ((obj2.totalFunding + obj2.totalPayed) == 0) {
+                    return 0 - ((obj1.totalFunding + obj1.totalPayed) / obj1.targetFunding * 100);
                 }
 
-                return (obj2.totalFunding / obj2.targetFunding * 100) - (obj1.totalFunding / obj1.targetFunding * 100);
+                return ((obj2.totalFunding + obj2.totalPayed) / obj2.targetFunding * 100) - ((obj1.totalFunding + obj1.totalPayed) / obj1.targetFunding * 100);
             });
 
             return res.status(httpStatus.OK).json(new APIResponse(allGrant, 'Grants fetched successfully', httpStatus.OK));

@@ -14,7 +14,7 @@ export class PayoutService {
     }
 
     async getAll(): Promise<Payout[]> {
-        const response = await this.PayoutModel.find({ isActive: true })
+        const response = await this.PayoutModel.find()
             .populate('grantManager')
             .populate('grantee')
             .populate('grant')
@@ -48,16 +48,16 @@ export class PayoutService {
         const response = await this.PayoutModel.find({
             grantee: userId
         })
-            .populate('grantManager')
-            .populate('grantee')
-            .populate('grant')
+            // .populate('grantManager')
+            // .populate('grantee')
+            // .populate('grant')
             .exec();
         return response;
     }
 
-    async getByUserAndGrant(userId: string, grantId: string): Promise<any> {
+    async getByGranteeAndGrant(userId: string, grantId: string): Promise<any> {
         const response = await this.PayoutModel.find({
-            user: userId,
+            grantee: userId,
             grant: grantId
         })
             .populate('grantManager')
@@ -67,13 +67,31 @@ export class PayoutService {
         return response;
     }
 
+    async getByManagerAndRequest(requestId: string, managerId: string): Promise<any> {
+        const response = await this.PayoutModel.findOne({
+            _id: requestId,
+            grantManager: managerId
+        }).exec();
+        return response;
+    }
+
+    async approveRequest(id: string): Promise<Payout> {
+        const response = await this.PayoutModel.findByIdAndUpdate(id, { status: "approved" }, { new: true });
+        return response;
+    }
+
+    async rejectRequest(id: string): Promise<Payout> {
+        const response = await this.PayoutModel.findByIdAndUpdate(id, { status: "rejected" }, { new: true });
+        return response;
+    }
+
     async update(data: Payout): Promise<Payout> {
         const response = await this.PayoutModel.findByIdAndUpdate(data._id, data, { new: true });
         return response;
     }
 
-    async delete(data: Payout): Promise<Payout> {
-        const response = await this.PayoutModel.findByIdAndUpdate(data._id, { status: "delete" }, { new: true });
+    async delete(id: string): Promise<Payout> {
+        const response = await this.PayoutModel.findByIdAndUpdate(id, { status: "delete" }, { new: true });
         return response;
     }
 }
